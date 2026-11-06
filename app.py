@@ -14,7 +14,10 @@ def get_neural_parser():
         try:
             neural_parser = benepar.Parser("benepar_en3")
         except Exception as error:
+            import traceback
             neural_parser_error = str(error)
+            print("NEURAL PARSER ERROR:", flush=True)
+            traceback.print_exc()
     return neural_parser
 grammar = CFG.fromstring("""
 S -> NP VP
