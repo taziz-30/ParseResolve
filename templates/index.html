@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParseResolve | Models of Ambiguity Resolution</title>
+
+    <style>
+        :root {
+            --bg: #071225;
+            --panel: #0d1b33;
+            --panel-light: #122440;
+            --blue: #48a8ff;
+            --blue-light: #8acaff;
+            --white: #f4f8ff;
+            --muted: #a7b7d0;
+            --border: #263b59;
+            --green: #57d6a1;
+            --red: #ff8f9a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--white);
+            line-height: 1.65;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button, input {
+            font: inherit;
+        }
+
+        .container {
+            width: min(1120px, 92%);
+            margin: auto;
+        }
+
+        header {
+            background: rgba(7, 18, 37, 0.96);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .navbar {
+            min-height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--blue);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--muted);
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--blue-light);
+        }
+
+        .hero {
+            padding: 84px 0 66px;
+            background:
+                radial-gradient(ellipse at 85% 10%, #173b66 0%, transparent 40%),
+                var(--bg);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            align-items: center;
+            gap: 48px;
+        }
+
+        .eyebrow {
+            color: var(--blue-light);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            font-size: clamp(36px, 5vw, 58px);
+            line-height: 1.12;
+            letter-spacing: -1.5px;
+            margin-bottom: 22px;
+        }
+
+        h1 span {
+            color: var(--blue);
+        }
+
+        .hero-description {
+            color: var(--muted);
+            font-size: 17px;
+            max-width: 590px;
+            margin-bottom: 28px;
+        }
+
+        .primary-button {
+            display: inline-block;
+            padding: 13px 22px;
+            background: var(--blue);
+            color: #061326;
+            font-weight: 800;
+            border-radius: 9px;
+            border: 0;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .primary-button:hover {
+            background: var(--blue-light);
+            transform: translateY(-2px);
+        }
+
+        .secondary-button {
+            display: inline-block;
+            padding: 12px 20px;
+            color: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            margin-left: 8px;
+        }
+
+        .secondary-button:hover {
+            background: var(--panel-light);
+        }
+
+        .example-card, .panel, .model-card, .about-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 17px;
+        }
+
+        .example-card {
+            padding: 27px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .example-sentence {
+            font-size: 23px;
+            margin: 5px 0 22px;
+        }
+
+        .tree-container {
+            background: #09172b;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px 12px;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .tree-node {
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 3px;
+            padding: 10px 14px;
+            border: 1px solid #3477b7;
+            background: #112b49;
+            border-radius: 9px;
+            color: var(--blue-light);
+            font-weight: 800;
+            min-width: 68px;
+        }
+
+        .root-node {
+            background: #174779;
+            color: white;
+            min-width: 82px;
+        }
+
+        .tree-node small {
+            color: var(--white);
+            font-weight: 400;
+            font-size: 12px;
+        }
+
+        .tree-connector {
+            width: 1px;
+            height: 22px;
+            background: var(--blue);
+            margin: auto;
+        }
+
+        .tree-branches {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            position: relative;
+        }
+
+        .tree-branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .tree-horizontal {
+            height: 1px;
+            width: 55%;
+            background: var(--blue);
+            margin: auto;
+        }
+
+        .structure-note {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 17px;
+        }
+
+        section {
+            padding: 68px 0;
+            scroll-margin-top: 80px;
+        }
+
+        .section-heading {
+            text-align: center;
+            max-width: 720px;
+            margin: 0 auto 35px;
+        }
+
+        .section-heading h2 {
+            font-size: clamp(27px, 4vw, 38px);
+            line-height: 1.25;
+            margin-bottom: 13px;
+        }
+
+        .section-heading p {
+            color: var(--muted);
+        }
+
+        .panel {
+            padding: 30px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .sentence-input {
+            width: 100%;
+            min-height: 54px;
+            padding: 14px 16px;
+            color: var(--white);
+            background: #081528;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+        }
+
+        .sentence-input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(72, 168, 255, 0.12);
+        }
+
+        .input-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 12px;
+            margin: 8px 0 19px;
+        }
+
+        .examples-label {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 22px 0 10px;
+        }
+
+        .example-buttons {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+        }
+
+        .example-button {
+            background: var(--panel-light);
+            color: var(--white);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .example-button:hover {
+            border-color: var(--blue);
+            color: var(--blue-light);
+        }
+
+        .submit-row {
+            margin-top: 24px;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .results h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 15px 17px;
+            border-radius: 9px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            background: #101f36;
+        }
+
+        .message.success {
+            border-color: #267a61;
+        }
+
+        .message.error {
+            border-color: #8c4550;
+        }
+
+        .status-label {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 7px;
+            background: #153553;
+            color: var(--blue-light);
+            font-size: 13px;
+            margin: 0 0 17px;
+        }
+
+        .parse-card {
+            padding: 22px;
+            border: 1px solid var(--border);
+            background: #09172b;
+            border-radius: 12px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .parse-card h4 {
+            font-size: 17px;
+            margin-bottom: 12px;
+        }
+
+        .attachment {
+            display: inline-block;
+            padding: 5px 9px;
+            color: var(--blue-light);
+            background: #112d4c;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tree-output {
+            color: #b9ddff;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            padding: 15px;
+            background: #061020;
+            border-radius: 8px;
+            border: 1px solid #1c304b;
+        }
+
+        .meaning-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #10263c;
+            border-left: 3px solid var(--blue);
+            border-radius: 5px;
+        }
+
+        .meaning-box strong {
+            color: var(--blue-light);
+            font-size: 13px;
+        }
+
+        .meaning-box p {
+            margin-top: 6px;
+            color: var(--white);
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .model-card {
+            padding: 25px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .model-card:hover {
+            transform: translateY(-4px);
+            border-color: #397cb9;
+        }
+
+        .model-number {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            background: #15385c;
+            color: var(--blue-light);
+            border-radius: 10px;
+            font-weight: 800;
+            margin-bottom: 19px;
+        }
+
+        .model-card h3 {
+            font-size: 19px;
+            margin-bottom: 10px;
+        }
+
+        .model-card p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .tag {
+            display: inline-block;
+            margin-top: 17px;
+            padding: 5px 9px;
+            border-radius: 5px;
+            background: #173a58;
+            color: var(--blue-light);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .about-card {
+            padding: 28px;
+        }
+
+        .about-card h3 {
+            margin-bottom: 12px;
+        }
+
+        .about-card p, .about-card li {
+            color: var(--muted);
+        }
+
+        .about-card ul {
+            padding-left: 22px;
+            margin-top: 13px;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 24px 0;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 800px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .hero {
+                padding-top: 55px;
+            }
+
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: 15px 0;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            nav {
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .panel, .example-card {
+                padding: 18px;
+            }
+
+            .secondary-button {
+                margin: 10px 0 0;
+            }
+
+            .example-sentence {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="container navbar">
+        <a class="logo" href="#home">Parse<span>Resolve</span></a>
+
+        <nav aria-label="Main navigation">
+            <a href="#home">Home</a>
+            <a href="#resolver">Resolver</a>
+            <a href="#models">Models</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="hero" id="home">
+        <div class="container hero-grid">
+
+            <div>
+                <p class="eyebrow">NATURAL LANGUAGE PROCESSING</p>
+
+                <h1>Models of <span>Ambiguity Resolution</span></h1>
+
+                <p class="hero-description">
+                    Explore how Natural Language Processing analyses
+                    sentence structure, generates parse trees, and
+                    identifies possible interpretations of language.
+                </p>
+
+                <a class="primary-button" href="#resolver">
+                    Try Sentence Resolver
+                </a>
+
+                <a class="secondary-button" href="#models">
+                    Explore Models
+                </a>
+            </div>
+
+            
+<div class="example-card">
+    <p class="eyebrow">EXAMPLE · SENTENCE STRUCTURE</p>
+
+    <h3 class="example-sentence">The young boy chased the dog.</h3>
+
+    <div class="tree-container">
+        <div class="tree-node root-node">S</div>
+        <div class="tree-connector"></div>
+        <div class="tree-horizontal"></div>
+
+        <div class="tree-branches">
+            <div class="tree-branch">
+                <div class="tree-connector"></div>
+                <div class="tree-node">
+                    NP
+                    <small>The young boy</small>
+                </div>
+            </div>
+
+            <div class="tree-branch">
+                <div class="tree-connector"></div>
+                <div class="tree-node">
+                    VP
+                    <small>chased the dog</small>
+                </div>
+
+                <div class="tree-connector"></div>
+                <div class="tree-horizontal"></div>
+
+                <div class="tree-branches">
+                    <div class="tree-branch">
+                        <div class="tree-connector"></div>
+                        <div class="tree-node">
+                            V
+                            <small>chased</small>
+                        </div>
+                    </div>
+
+                    <div class="tree-branch">
+                        <div class="tree-connector"></div>
+                        <div class="tree-node">
+                            NP
+                            <small>the dog</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+                <p class="structure-note">
+                    S = Sentence · NP = Noun Phrase · VP = Verb Phrase · V = Verb
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="resolver">
+        <div class="container">
+            <div class="section-heading">
+                <p class="eyebrow">INTERACTIVE DEMO</p>
+                <h2>Sentence Ambiguity Resolver</h2>
+              <p>
+    Enter a sentence to explore Rule-Based, Probabilistic,
+    and Neural Parsing models and compare their generated
+    grammatical structures.
+</p>
+            </div>
+
+            <div class="panel">
+                <form method="POST" action="#resolver" id="parser-form">
+                    <label class="field-label" for="sentence">
+                        Enter your sentence
+                    </label>
+
+                    <input
+                        class="sentence-input"
+                        type="text"
+                        id="sentence"
+                        name="sentence"
+                        maxlength="500"
+                        placeholder="Example: I saw the man with a telescope"
+                        value="{{ sentence }}"
+                        autocomplete="off"
+                    >
+
+                    <div class="input-meta">
+                        <span>Enter a sentence in English.</span>
+                        <span id="char-count">0 / 500</span>
+                    </div>
+
+                    <p class="examples-label">Try an example:</p>
+
+                    <div class="example-buttons">
+                        <button type="button" class="example-button"
+                            data-sentence="The boy hits the ball.">
+                            The boy hits the ball
+                        </button>
+
+                        <button type="button" class="example-button"
+                            data-sentence="The young boy chased the dog.">
+                            The young boy chased the dog
+                        </button>
+
+                        <button type="button" class="example-button"
+                            data-sentence="She saw the plane.">
+                            She saw the plane
+                        </button>
+
+                        <button type="button" class="example-button"
+                            data-sentence="I saw the man with a telescope.">
+                            Telescope ambiguity
+                        </button>
+                    </div>
+
+                    <div class="submit-row">
+                        <button type="submit" class="primary-button">
+                            Analyze Sentence
+                        </button>
+                    </div>
+                </form>
+
+                {% if message or trees or neural_tree or status == "error" %}
+                <div class="results" aria-live="polite">
+                    <h3>Analysis Results</h3>
+
+                    {% if message %}
+                        <div class="message {{ status }}">
+                            <strong>
+                                {% if status == "success" %}
+                                    ✓ Analysis complete
+                                {% elif status == "error" %}
+                                    ! Please check your input
+                                {% else %}
+                                    Analysis
+                                {% endif %}
+                            </strong>
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if trees %}
+                        {% if ambiguity_status %}
+                            <div class="status-label">
+                                {{ ambiguity_status }}
+                            </div>
+                        {% endif %}
+
+                        {% for tree in trees %}
+                            <article class="parse-card">
+                                <h4>Parse Tree {{ tree.number }}</h4>
+
+                                {% if tree.attachment %}
+                                    <div class="attachment">
+                                        {{ tree.attachment }}
+                                    </div>
+                                {% endif %}
+
+                                <pre class="tree-output">{{ tree.text }}</pre>
+
+                                {% if tree.meaning %}
+                                    <div class="meaning-box">
+                                        <strong>Possible Meaning</strong>
+                                        <p>{{ tree.meaning }}</p>
+                                    </div>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                        {% if probabilistic_tree %}
+    <article class="parse-card">
+        <h4>Probabilistic Parsing - Best Parse</h4>
+
+        <div class="attachment">
+            Viterbi Parser
+        </div>
+
+        <pre class="tree-output">{{ probabilistic_tree }}</pre>
+
+        <div class="meaning-box">
+            <strong>Probability Score</strong>
+                <p>{{ probability }}</p>
+        </div>
+    </article>
+                    {% endif %}
+                    {% endif %}
+                                        {% if neural_tree %}
+                        <article class="parse-card">
+                            <h4>Neural Parsing - Generated Parse Tree</h4>
+
+                            <div class="attachment">
+                                Benepar · Pretrained Neural Model
+                            </div>
+
+                            <pre class="tree-output">{{ neural_tree }}</pre>
+
+                            <div class="meaning-box">
+                                <strong>Neural Parsing Result</strong>
+                                <p>
+                                    The neural model analyzed the sentence
+                                    and generated its constituency parse tree
+                                    using learned language patterns.
+                                </p>
+                            </div>
+                        </article>
+                    {% elif neural_error %}
+                        <article class="parse-card">
+                            <h4>Neural Parsing</h4>
+                            <div class="message error">
+                                Neural model could not generate a parse tree.
+                                Please check the application terminal for details.
+                            </div>
+                        </article>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section id="models">
+        <div class="container">
+            <div class="section-heading">
+                <p class="eyebrow">PARSING APPROACHES</p>
+                <h2>Models for Ambiguity Resolution</h2>
+                <p>
+                    Different approaches can help a system determine
+                    the grammatical structure and intended meaning
+                    of a sentence.
+                </p>
+            </div>
+
+           
+            </div>
+        </div>
+    </section>
+
+
+</main>
+
+<footer>
+    <div class="container">
+           ParseResolve · Models for Ambiguity Resolution in Parsing
+        <article class="model-card">
+    <div class="model-number">01</div>
+    <h3>Rule-Based Parsing</h3>
+    <p>
+        Uses predefined grammar rules to identify
+        grammatical structures and construct possible
+        parse trees for a given sentence.
+    </p>
+    <span class="tag">ACTIVE MODEL</span>
+</article>
+
+<article class="model-card">
+    <div class="model-number">02</div>
+    <h3>Probabilistic Parsing</h3>
+    <p>
+        Uses a Probabilistic Context-Free Grammar (PCFG)
+        and a Viterbi parser to select a parse tree based
+        on probabilities assigned to grammar productions.
+    </p>
+    <span class="tag">ACTIVE MODEL · PCFG</span>
+</article>
+
+<article class="model-card">
+    <div class="model-number">03</div>
+    <h3>Neural Parsing</h3>
+    <p>
+        Uses the pretrained Benepar neural model to
+        analyze sentence context and generate
+        constituency parse trees.
+    </p>
+    <span class="tag">ACTIVE MODEL · BENEPAR</span>
+</article>
+
+             
+</footer>
+
+<script>
+    const sentenceInput = document.getElementById("sentence");
+    const charCount = document.getElementById("char-count");
+    const form = document.getElementById("parser-form");
+
+    function updateCharacterCount() {
+        charCount.textContent =
+            sentenceInput.value.length + " / 500";
+    }
+
+    sentenceInput.addEventListener("input", updateCharacterCount);
+
+    document.querySelectorAll("[data-sentence]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            sentenceInput.value = button.dataset.sentence;
+            updateCharacterCount();
+            sentenceInput.focus();
+        });
+    });
+
+    form.addEventListener("submit", function(event) {
+        if (!sentenceInput.value.trim()) {
+            event.preventDefault();
+            sentenceInput.focus();
+            alert("Please enter a sentence before analyzing.");
+        }
+    });
+
+    updateCharacterCount();
+</script>
+
+</body>
+</html>
